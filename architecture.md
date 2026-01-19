@@ -19,7 +19,7 @@ flowchart TB
 
   %% MCP Client and Servers
   subgraph MCP["MCP Tooling"]
-    MC["MCP Client<br/>stdio transport"]
+    MC["MCP Client<br/>SSE transport"]
     subgraph SRV["MCP Servers"]
       TS["Tickets Server<br/>search and create"]
       KB["Knowledge Base Server<br/>query"]

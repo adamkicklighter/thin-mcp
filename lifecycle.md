@@ -34,7 +34,7 @@ sequenceDiagram
   H->>P: Verify selected tool allowed and within limits
   P-->>H: Approved
 
-  Note over H,M: Tool invocation and SSE or stdio execution
+  Note over H,M: Tool invocation via SSE
   H->>M: call_tool(tool_id, args)
   alt Tickets tool
     M->>TS: call_tool

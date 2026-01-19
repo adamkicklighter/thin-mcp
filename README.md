@@ -12,10 +12,10 @@ This POC demonstrates:
    pip install -r requirements.txt
    ```
 
-2) Create `.env` from `.env.example` and set OPENAI_API_KEY
+2) Create a `.env` file with your OPENAI_API_KEY:
 
 ## Run the demo
-streamlit run app_streamlit.py
+streamlit run app.py
 
 ## Suggested demo prompts
 - "Find open tickets for CVX-12 in last 7 days"
