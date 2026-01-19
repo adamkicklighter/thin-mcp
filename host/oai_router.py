@@ -16,6 +16,20 @@ class OAIRouter:
         self.client = client
         self.model = model
 
+    def _make_strict_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
+        """Add additionalProperties: false to all objects in schema for strict mode."""
+        if isinstance(schema, dict):
+            if schema.get("type") == "object":
+                schema["additionalProperties"] = False
+            for key, value in schema.items():
+                if isinstance(value, dict):
+                    self._make_strict_schema(value)
+                elif isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            self._make_strict_schema(item)
+        return schema
+
     def choose_tool(self, user_input: str, tools: List[ToolSpec]) -> RouteDecision:
         # Compact tool list for the model
         tool_brief = [
@@ -27,11 +41,9 @@ class OAIRouter:
             for t in tools
         ]
 
-        schema = {
-            "name": "route_decision",
-            "schema": RouteDecision.model_json_schema(),
-            "strict": True,
-        }
+        schema = RouteDecision.model_json_schema()
+        # Make schema strict for OpenAI structured outputs
+        schema = self._make_strict_schema(schema)
 
         prompt = (
             "You are a routing controller. Choose exactly one tool to call.\n"
@@ -42,16 +54,24 @@ class OAIRouter:
             "- If the request is operational on tickets, prefer tickets.* tools.\n"
         )
 
-        # Responses API supports structured outputs and tool-style JSON responses. :contentReference[oaicite:4]{index=4}
-        resp = self.client.responses.create(
+        # Use chat completions API with response_format for structured outputs
+        resp = self.client.chat.completions.create(
             model=self.model,
-            input=[
+            messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": f"User request: {user_input}\n\nAvailable tools:\n{json.dumps(tool_brief, indent=2)}"},
             ],
-            text={"format": {"type": "json_schema", "json_schema": schema}},
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "route_decision",
+                    "schema": schema,
+                    "strict": True
+                }
+            }
         )
 
-        # The SDK returns structured content under resp.output_text for json_schema text output
-        decision = RouteDecision.model_validate_json(resp.output_text)
+        # Extract the JSON content from the response
+        content = resp.choices[0].message.content
+        decision = RouteDecision.model_validate_json(content)
         return decision

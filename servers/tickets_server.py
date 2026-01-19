@@ -1,9 +1,8 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from mcp.server.fastmcp import FastMCP
-
-mcp = FastMCP("tickets")
+from typing import Any
+import json
+from fastmcp import FastMCP
 
 # In-memory demo data
 _TICKETS = [
@@ -12,15 +11,21 @@ _TICKETS = [
     {"id": "T-1003", "asset": "QRT-9", "status": "open", "created_at": "2026-01-18", "summary": "Vibration anomaly"},
 ]
 
+# Create FastMCP server
+mcp = FastMCP("tickets")
+
 @mcp.tool()
-def tickets_search(query: str, days: int = 30) -> Dict[str, Any]:
-    """
-    Search tickets by naive keyword matching and a 'days' time window.
+def tickets_search(query: str, days: int = 30) -> dict[str, Any]:
+    """Search tickets by naive keyword matching and a 'days' time window.
+    
+    Args:
+        query: Search query
+        days: Days to search back (default: 30)
     """
     cutoff = datetime.utcnow().date() - timedelta(days=days)
     q = query.lower()
 
-    def keep(t: Dict[str, Any]) -> bool:
+    def keep(t: dict[str, Any]) -> bool:
         created = datetime.strptime(t["created_at"], "%Y-%m-%d").date()
         if created < cutoff:
             return False
@@ -31,9 +36,13 @@ def tickets_search(query: str, days: int = 30) -> Dict[str, Any]:
     return {"count": len(hits), "tickets": hits}
 
 @mcp.tool()
-def tickets_create(asset: str, summary: str, priority: str = "medium") -> Dict[str, Any]:
-    """
-    Create a ticket (in-memory).
+def tickets_create(asset: str, summary: str, priority: str = "medium") -> dict[str, Any]:
+    """Create a ticket (in-memory).
+    
+    Args:
+        asset: Asset ID
+        summary: Ticket summary
+        priority: Priority level (default: medium)
     """
     new_id = f"T-{1000 + len(_TICKETS) + 1}"
     ticket = {
@@ -46,3 +55,7 @@ def tickets_create(asset: str, summary: str, priority: str = "medium") -> Dict[s
     }
     _TICKETS.append(ticket)
     return {"created": True, "ticket": ticket}
+
+if __name__ == "__main__":
+    # Run with SSE transport on port 8000
+    mcp.run(transport="sse", port=8000)

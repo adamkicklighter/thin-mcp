@@ -1,14 +1,16 @@
-# MCP Orchestrator POC (Local)
+# MCP Orchestrator POC (FastMCP + SSE)
 
 This POC demonstrates:
 - Streamlit UI for live demo
 - Thin host/orchestrator that uses an OpenAI model to choose the right tool
-- MCP servers (tickets + kb) running locally
+- MCP servers (tickets + kb) running with FastMCP and SSE transport
 - Multi-tenant allowlists and a visible trace of tool calls
 
 ## Setup
 1) Create venv and install deps
+   ```bash
    pip install -r requirements.txt
+   ```
 
 2) Create `.env` from `.env.example` and set OPENAI_API_KEY
 
