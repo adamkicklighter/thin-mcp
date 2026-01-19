@@ -235,7 +235,7 @@ class MCPOrchestrator:
                 logger.info(f"✓ Policy allows {len(allowed)} tools for tenant '{tenant_id}'")
 
                 logger.info("Calling LLM router to select tool...")
-                decision = self.router.choose_tool(user_input, allowed)
+                decision = await self.router.choose_tool(user_input, allowed)
                 logger.info(f"✓ Router selected: {decision.tool_id}")
                 logger.info(f"  Args: {decision.args}")
                 

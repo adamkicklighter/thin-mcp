@@ -2,7 +2,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Tuple
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 
 from host.types import ToolSpec
@@ -12,7 +12,7 @@ class RouteDecision(BaseModel):
     args: Dict[str, Any] = Field(default_factory=dict, description="Arguments matching the tool's JSON schema.")
 
 class OAIRouter:
-    def __init__(self, client: OpenAI, model: str):
+    def __init__(self, client: AsyncOpenAI, model: str):
         self.client = client
         self.model = model
 
@@ -30,7 +30,7 @@ class OAIRouter:
                             self._make_strict_schema(item)
         return schema
 
-    def choose_tool(self, user_input: str, tools: List[ToolSpec]) -> RouteDecision:
+    async def choose_tool(self, user_input: str, tools: List[ToolSpec]) -> RouteDecision:
         # Compact tool list for the model
         tool_brief = [
             {
@@ -55,7 +55,7 @@ class OAIRouter:
         )
 
         # Use chat completions API with response_format for structured outputs
-        resp = self.client.chat.completions.create(
+        resp = await self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {"role": "system", "content": prompt},

@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 
 import streamlit as st
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 
 from host.oai_router import OAIRouter
 from host.tenant_policy import TENANTS
@@ -62,7 +62,7 @@ colA, colB = st.columns([1, 1], gap="large")
 run = colA.button("Run Orchestration", type="primary")
 
 if run:
-    client = OpenAI(api_key=api_key)
+    client = AsyncOpenAI(api_key=api_key)
     router = OAIRouter(client=client, model=model)
     orch = MCPOrchestrator(router=router)
     
@@ -79,7 +79,7 @@ if run:
             result = loop.run_until_complete(
                 asyncio.wait_for(
                     orch.invoke(tenant_id=tenant_id, user_input=prompt),
-                    timeout=60.0
+                    timeout=120.0  # Increased from 60.0 to 120.0
                 )
             )
             
